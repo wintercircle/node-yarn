@@ -4,7 +4,6 @@ pipeline:
     secrets: [ docker_username, docker_password ]
     repo: wintercircle/node-yarn
     dockerfile: node-6/Dockerfile
-    tags: latest
     when:
       branch: master
   docker:
