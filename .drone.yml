@@ -1,12 +1,13 @@
 pipeline:
-  docker:
+  docker-latest:
     image: plugins/docker
     secrets: [ docker_username, docker_password ]
     repo: wintercircle/node-yarn
     dockerfile: node-6/Dockerfile
+    tags: latest
     when:
       branch: master
-  docker:
+  docker-alpine:
     image: plugins/docker
     secrets: [ docker_username, docker_password ]
     repo: wintercircle/node-yarn
