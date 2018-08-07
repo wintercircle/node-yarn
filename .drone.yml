@@ -3,7 +3,7 @@ pipeline:
     image: plugins/docker
     secrets: [ docker_username, docker_password ]
     repo: wintercircle/node-yarn
-    dockerfile: node-6/Dockerfile
+    dockerfile: node/Dockerfile
     tags: latest
     when:
       branch: master
