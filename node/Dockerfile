@@ -6,4 +6,5 @@ RUN apt-get update && apt-get install -y gconf-service libasound2 libatk1.0-0 li
         ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libx11-xcb-dev libatk-bridge2.0-0
 RUN npm install -g yarn
 USER node
+WORKDIR /home/node
 
