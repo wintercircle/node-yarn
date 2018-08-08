@@ -7,6 +7,14 @@ pipeline:
     tags: latest
     when:
       branch: master
+  docker-testing:
+    image: plugins/docker
+    secrets: [ docker_username, docker_password ]
+    repo: wintercircle/node-yarn
+    dockerfile: node-chrome/Dockerfile
+    tags: testing
+    when:
+      branch: master
   docker-alpine:
     image: plugins/docker
     secrets: [ docker_username, docker_password ]
