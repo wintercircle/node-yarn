@@ -1,0 +1,62 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - export GIT_SHORT_COMMIT="$(git log -1 --pretty=%h)"
+      - export GIT_TAG="$(git describe --tags --exact-match 2>/dev/null)"
+      - export GIT_BRANCH="$(git symbolic-ref HEAD --short 2>/dev/null)"
+      - |
+        if [ "$GIT_BRANCH" = "" ] ; then
+          GIT_BRANCH="$(git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }')";
+          export GIT_BRANCH=${GIT_BRANCH#remotes/origin/};
+        fi
+      - echo ${GIT_SHORT_COMMIT}
+      - echo ${GIT_BRANCH}
+      - echo ${GIT_TAG}
+      - |
+        if [ "${GIT_BRANCH}" = "codebuild" ] ; then
+          if [ "${GIT_TAG}" = "" ] ; then
+            export DOCKER_TAG="codebuild"
+          fi
+        fi
+      - |
+        if [ "${GIT_BRANCH}" = "development" ] ; then
+          if [ "${GIT_TAG}" = "" ] ; then
+            export DOCKER_TAG="dev"
+          fi
+        fi
+      - |
+        if [ "${GIT_BRANCH}" = "staging" ] ; then
+          if [ "${GIT_TAG}" = "" ] ; then
+            export DOCKER_TAG="staging"
+          fi
+        fi
+      - |
+        if [ "${GIT_TAG}" != "" ] ; then
+          export DOCKER_TAG="${GIT_TAG}"
+        fi
+  build:
+    commands:
+      - export ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+      - export REGION="eu-west-1"
+      - |
+        if [ "${GIT_BRANCH}" = "codebuild" ] || [ "${GIT_BRANCH}" = "master" ] ; then
+          echo "Building docker containers"
+          docker build -f node/Dockerfile -t node-yarn:latest .
+          docker build -f node-chrome/Dockerfile -t node-yarn:testing .
+          docker build -f node-alpine-latest/Dockerfile -t node-yarn:alpine .
+          $(aws ecr get-login --no-include-email --region ${REGION})
+          REPO=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/builds/node-yarn:latest
+          docker tag node-yarn:latest $REPO
+          docker push $REPO
+          REPO=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/builds/node-yarn:testing
+          docker tag node-yarn:testing $REPO
+          docker push $REPO
+          REPO=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/builds/node-yarn:alpine
+          docker tag node-yarn:alpine $REPO
+          docker push $REPO
+        fi
+  post_build:
+    commands:
+      - echo "all done"
